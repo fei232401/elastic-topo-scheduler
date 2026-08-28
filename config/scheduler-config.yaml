@@ -1,0 +1,32 @@
+# 自定义 scheduler 配置:启用本项目的两个 out-of-tree 插件。
+# 用法:bin/kube-scheduler --config config/scheduler-config.yaml
+# 版本对齐:本配置格式来自 k8s.io/kube-scheduler/config/v1(v0.35.0),与 k3s v1.35 集群匹配(见设计决策 D5 修正记录)。
+apiVersion: kubescheduler.config.k8s.io/v1
+kind: KubeSchedulerConfiguration
+
+# 关键:--config 提供时,--kubeconfig flag 会被静默忽略(源码 options.go: ApplyTo 只
+# ApplyLeaderElectionTo,不 ApplyDeprecated),主 client 只读这里。
+# 所以 scheduler 的 kubeconfig 必须写死在这,不能靠 CLI flag。
+clientConnection:
+  kubeconfig: ~/.kube/config
+
+profiles:
+  # profile 名可自定义,集群里给 Pod 打 schedulerName 即可命中
+  - schedulerName: topo-scheduler
+
+    plugins:
+      # 打分阶段:TopologyScore 在 Score 阶段运行
+      score:
+        enabled:
+          - name: TopologyScore
+      # 抢占阶段:TopoPreempt 在 PostFilter 阶段运行
+      postFilter:
+        enabled:
+          - name: TopoPreempt
+
+    # 插件初始化参数(Phase 0 无参数,先占位,Phase 1 放 fragmentation_cap 等标定值)
+    pluginConfig:
+      - name: TopologyScore
+        args:
+          apiVersion: topology.gpu-scheduler.io/v1
+          kind: TopologyScoreArgs

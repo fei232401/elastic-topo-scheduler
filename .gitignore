@@ -1,0 +1,13 @@
+# 编译产物（自定义 scheduler 二进制不进版本控制）
+bin/
+*.test
+*.out
+__pycache__/
+*.pyc
+
+# k3d/kubeconfig 本地产物
+*.kubeconfig
+k3d-*.yaml.tmp
+
+# Go
+vendor/

@@ -1,0 +1,25 @@
+{
+  "env": {
+    "host": "AutoDL, 2x RTX 5090 D 32GB",
+    "topology": "same NUMA 0, PHB (PCIe), no NVLink",
+    "driver": "595.71.05",
+    "torch": "2.13.0+cu130",
+    "python": "3.12.14",
+    "cc": [12, 0]
+  },
+  "single_gpu_d2d": { "bw_gbps": 1526.1, "note": "on-card memcpy baseline (read+write each once)" },
+  "allreduce_2gpu": [
+    { "size_mb": 1, "bw_gbps": 23.4, "ms_per_iter": 0.09 },
+    { "size_mb": 4, "bw_gbps": 27.7, "ms_per_iter": 0.3 },
+    { "size_mb": 16, "bw_gbps": 28.7, "ms_per_iter": 1.17 },
+    { "size_mb": 64, "bw_gbps": 29.0, "ms_per_iter": 4.62 },
+    { "size_mb": 256, "bw_gbps": 30.2, "ms_per_iter": 17.8 },
+    { "size_mb": 512, "bw_gbps": 30.2, "ms_per_iter": 35.52 },
+    { "size_mb": 1024, "bw_gbps": 30.3, "ms_per_iter": 70.99 }
+  ],
+  "headline": {
+    "oncard_vs_pcie_ratio": 50.3,
+    "compute": "oncard 1526.1 vs pcie 30.3 GB/s"
+  },
+  "limitation": "both GPUs on same NUMA 0 -> cross-NUMA bandwidth unmeasurable; quantified via L3 sim with BW_CROSS = PCIE * 0.7 assumption"
+}
