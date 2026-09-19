@@ -31,13 +31,13 @@ def d2d_bw(gpu: int, mb: int = 1024) -> float:
     dst = torch.empty_like(src)
     for _ in range(5):
         dst.copy_(src)
-    torch.cuda.synchronize
+    torch.cuda.synchronize()
     iters = 50
-    t0 = time.time
+    t0 = time.time()
     for _ in range(iters):
         dst.copy_(src)
-    torch.cuda.synchronize
-    elapsed = (time.time - t0) / iters
+    torch.cuda.synchronize()
+    elapsed = (time.time() - t0) / iters
     return 2 * n * 4 / elapsed / 1e9
 
 
@@ -48,18 +48,18 @@ def allreduce_bw(rank: int, size_mb: int):
     t = torch.randn(n, device="cuda")
     for _ in range(5):
         dist.all_reduce(t)
-    torch.cuda.synchronize
+    torch.cuda.synchronize()
     iters = 30
-    t0 = time.time
+    t0 = time.time()
     for _ in range(iters):
         dist.all_reduce(t)
-    torch.cuda.synchronize
-    elapsed = (time.time - t0) / iters  # 每轮毫秒
+    torch.cuda.synchronize()
+    elapsed = (time.time() - t0) / iters  # 每轮毫秒
     bw = 2 * n * 4 / elapsed / 1e9
     return bw, elapsed * 1e3
 
 
-def main -> None:
+def main() -> None:
     rank = int(os.environ.get("RANK", "0"))
     world = int(os.environ.get("WORLD_SIZE", "1"))
 
@@ -76,8 +76,8 @@ def main -> None:
                               "bw_gbps": round(bw, 1), "ms_per_iter": round(ms, 2)}), flush=True)
     if rank == 0:
         print(json.dumps({"phase": "allreduce_done", "note": "双卡 PHB/PCIe 通信曲线"}))
-    dist.destroy_process_group
+    dist.destroy_process_group()
 
 
 if __name__ == "__main__":
-    main
+    main()

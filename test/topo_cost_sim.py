@@ -53,7 +53,7 @@ def comm_ms(same_card: bool, same_domain: bool) -> float:
     return max(SIZE_GB / bw * 1000.0, LATENCY_MS)
 
 
-def single_reduce_ladder -> None:
+def single_reduce_ladder() -> None:
     print("【0】单次 %.1fGB all-reduce 链路对比(通信耗时)" % SIZE_GB)
     for label, sc, sd in [("同卡(显存)", True, True), ("同域跨卡(PCIe)", False, True), ("跨域(假设)", False, False)]:
         print("   %-16s %7.1f ms" % (label, comm_ms(sc, sd)))
@@ -83,7 +83,7 @@ def step_ms(slots: list) -> tuple[float, str, float]:
     return max(compute, ms), link, (1.0 if d0 == d1 else 0.5)
 
 
-def blind_place -> list:
+def blind_place() -> list:
     """盲目调度:rank 逐个到达(同 gang 两 rank 之间隔≥1 个其它 gang 的 rank,模拟
     独立调度周期/gang race),每个 rank 落到负载最低的卡(并列取小下标)。
     机制:gang 非原子到达 + 容量压力 → 同 gang 的 rank 落到不同域。"""
@@ -99,7 +99,7 @@ def blind_place -> list:
     return gangs
 
 
-def topo_place -> list:
+def topo_place() -> list:
     """拓扑感知调度:每个 gang 原子放进同一域(邻近度优先,模拟 0.7·邻近+0.3·碎片),
     先占满域内两卡。同 gang 必同域 → 邻近度 1.0。"""
     domains = [0, 0, 0, 0]  # 每域已用卡数
@@ -112,10 +112,10 @@ def topo_place -> list:
     return gangs
 
 
-def cluster_compare -> None:
+def cluster_compare() -> None:
     print("\n【1】集群级(%d 域×2 卡,TP-2 gang ×%d,每卡容量 %d)" % (N_DOMAINS, N_GANGS, CAP_PER_GPU))
     for label, fn in [("盲目(rank 非原子到达,最小负载卡)", blind_place), ("拓扑感知(原子同域打包)", topo_place)]:
-        gangs = fn
+        gangs = fn()
         by_link = {}
         walls, prox = [], []
         for slots in gangs:
@@ -124,18 +124,18 @@ def cluster_compare -> None:
             walls.append(wall)
             prox.append(p)
         print("  %s:" % label)
-        print("    gang 分布:%s" % ", ".join(f"{k}×{v}" for k, v in sorted(by_link.items)))
+        print("    gang 分布:%s" % ", ".join(f"{k}×{v}" for k, v in sorted(by_link.items())))
         print("    平均邻近度 %.2f | 平均步墙钟 %.0f ms" % (sum(prox) / len(prox), sum(walls) / len(walls)))
 
 
 # ---------- 主流程 ----------
-def main -> None:
+def main() -> None:
     print("拓扑成本模拟(实测常数):单卡 %.0f | 同域 PCIe %.1f | 跨域 %.1f GB/s(假设)" % (BW_ONCARD, BW_PCIE, BW_CROSS))
     print("workload 参数:grad %.1fGB/步 | 计算 %.0f ms/步 | TP-2" % (SIZE_GB, T_COMPUTE_MS))
     print("-" * 64)
-    single_reduce_ladder
-    cluster_compare
+    single_reduce_ladder()
+    cluster_compare()
 
 
 if __name__ == "__main__":
-    main
+    main()

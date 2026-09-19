@@ -14,7 +14,7 @@ import torch
 import torch.distributed as dist
 
 
-def main -> None:
+def main() -> None:
     rank = int(os.environ["RANK"])
     world = int(os.environ["WORLD_SIZE"])
     dist.init_process_group("nccl", rank=rank, world_size=world)
@@ -29,9 +29,9 @@ def main -> None:
             else:
                 dist.recv(t, 0)
                 dist.send(t, 0)
-        torch.cuda.synchronize
+        torch.cuda.synchronize()
         iters = 2000
-        t0 = time.time
+        t0 = time.time()
         for _ in range(iters):
             if rank == 0:
                 dist.send(t, 1)
@@ -39,14 +39,14 @@ def main -> None:
             else:
                 dist.recv(t, 0)
                 dist.send(t, 0)
-        torch.cuda.synchronize
-        rtt_us = (time.time - t0) / iters * 1e6
+        torch.cuda.synchronize()
+        rtt_us = (time.time() - t0) / iters * 1e6
         if rank == 0:
             print(json.dumps({"size_bytes": n * 4, "rtt_us": round(rtt_us, 1),
                               "one_way_us": round(rtt_us / 2, 1)}), flush=True)
 
-    dist.destroy_process_group
+    dist.destroy_process_group()
 
 
 if __name__ == "__main__":
-    main
+    main()

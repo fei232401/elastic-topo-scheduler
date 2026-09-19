@@ -30,7 +30,7 @@ def weighted_place(alpha: float, card_aware: bool) -> list:
     gpus = [tcs.Gpu(d) for d in range(tcs.N_DOMAINS) for _ in range(tcs.GPUS_PER_DOMAIN)]
     order = [(0, 0), (1, 0), (2, 0), (3, 0), (0, 1), (4, 0), (1, 1), (5, 0), (2, 1), (6, 0),
              (3, 1), (7, 0), (4, 1), (5, 1), (6, 1), (7, 1)]
-    gang_cards = [set for _ in range(tcs.N_GANGS)]  # 每 gang 已占的 (domain, card)
+    gang_cards = [set() for _ in range(tcs.N_GANGS)]  # 每 gang 已占的 (domain, card)
     gangs = [[] for _ in range(tcs.N_GANGS)]
     for g, r in order:
         def score(i: int) -> float:
@@ -54,18 +54,18 @@ def avg_wall(gangs: list) -> float:
     return sum(tcs.step_ms(s)[0] for s in gangs) / len(gangs)
 
 
-def part_b4 -> None:
+def part_b4() -> None:
     print("=" * 64)
     print("B4 拓扑收益来源:原子性 vs 打分权重")
     print("=" * 64)
-    topo = avg_wall(tcs.topo_place)
-    blind = avg_wall(tcs.blind_place)
+    topo = avg_wall(tcs.topo_place())
+    blind = avg_wall(tcs.blind_place())
     print("  参考上界:原子打包(topo_place)      = %.0f ms" % topo)
     print("  参考下界:纯负载均衡(blind_place)   = %.0f ms" % blind)
     print("  → 收益 %.2f× 来自 gang **原子到达**(同 gang 两 rank 一起打包)" %
           (blind / topo))
-    print
-    print("  非原子到达 + 打分,α 扫 [0,1]:" % )
+    print()
+    print("  非原子到达 + 打分,α 扫 [0,1]:")
     print("   α   | 邻近度只算域(错) | 邻近度区分卡(对)")
     for alpha in [i / 10 for i in range(11)]:
         w_bad = avg_wall(weighted_place(alpha, card_aware=False))
@@ -77,7 +77,7 @@ def part_b4 -> None:
     print("   收益 1.32× 的主来源 = gang 原子调度(排队框架保证),打分权重只是原子性之后的微调")
 
 
-def part_b2 -> None:
+def part_b2() -> None:
     print("=" * 64)
     print("B2 MPS 惩罚稳健性:同卡共享 SM 的'计算×m',m 扫 1→3")
     print("=" * 64)
@@ -94,6 +94,6 @@ def part_b2 -> None:
 
 
 if __name__ == "__main__":
-    part_b4
-    print
-    part_b2
+    part_b4()
+    print()
+    part_b2()
